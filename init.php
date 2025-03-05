@@ -11,9 +11,29 @@ if (session_status() == PHP_SESSION_NONE) {
 // Output Buffering starten - fängt alle Ausgaben ab, bis ob_end_flush() aufgerufen wird
 ob_start();
 
+// Relativen Pfad zum Hauptverzeichnis bestimmen
+$rootPath = dirname(__FILE__).'/';
+
+// Direktes Einbinden der Klassen, falls der Autoloader fehlschlägt
+$classFiles = [
+    $rootPath . 'classes/Database.php',
+    $rootPath . 'classes/Language.php',
+    $rootPath . 'classes/User.php',
+    $rootPath . 'classes/Group.php',
+    $rootPath . 'classes/Menu.php',
+    $rootPath . 'classes/Permission.php'
+  ];
+
+foreach ($classFiles as $file) {
+  if (file_exists($file)) {
+      require_once $file;
+  } else {
+      die("Fehler: Datei $file nicht gefunden.");
+  }
+}
+
 // Konfiguration laden
 require_once 'config/config.php';
-require_once 'classes/Database.php';
 require 'vendor/autoload.php';
 
 // Autoloader für Klassen - Verbesserte Version mit Debugging
@@ -65,6 +85,31 @@ $lang = Language::getInstance();
 // Benutzerinstanz erstellen
 $user = new User();
 
+// Menüinstanz erstellen
+$menu = new Menu();
+
+// Menüs laden
+$mainMenu = $menu->getMenuItems('main');
+$userMenu = $menu->getMenuItems('user');
+
+// Aktiven Menüpunkt ermitteln
+$currentUrl = basename($_SERVER['PHP_SELF']);
+$activeMenuItem = $menu->getActiveMenuItem($mainMenu, $currentUrl);
+// Aktive Menüpunkte und deren Eltern markieren
+// Aktive Menüpunkte und deren Eltern markieren
+$activeMenuIds = [];
+if (!empty($activeMenuItem) && isset($activeMenuItem['item'])) {
+  $activeMenuIds[] = $activeMenuItem['item']['id'];
+  if (isset($activeMenuItem['parents']) && is_array($activeMenuItem['parents'])) {
+    foreach ($activeMenuItem['parents'] as $parent) {
+      if (isset($parent['id'])) {
+        $activeMenuIds[] = $parent['id'];
+      }
+    }
+  }
+}
+$smarty->assign('activeMenuIds', $activeMenuIds);
+
 // Globale Smarty-Variablen setzen
 $smarty->assign('currentLang', $lang->getCurrentLanguage());
 $smarty->assign('availableLanguages', $lang->getAvailableLanguages());
@@ -72,6 +117,10 @@ $smarty->assign('isLoggedIn', $user->isLoggedIn());
 if ($user->isLoggedIn()) {
   $smarty->assign('currentUser', $user->getCurrentUser());
 }
+$smarty->assign('user', $user);
+$smarty->assign('mainMenu', $mainMenu);
+$smarty->assign('userMenu', $userMenu);
+$smarty->assign('activeMenuItem', $activeMenuItem);
 
 // Übersetzungsfunktion für Smarty
 $smarty->registerPlugin('function', 'translate', function($params, $smarty) {

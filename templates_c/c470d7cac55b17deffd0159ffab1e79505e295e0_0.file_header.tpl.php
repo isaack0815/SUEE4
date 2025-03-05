@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-05 10:44:27
+/* Smarty version 5.4.3, created on 2025-03-05 13:11:28
   from 'file:admin/header.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c81cfb93b4d6_14307404',
+  'unifunc' => 'content_67c83f708ef277_99649209',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'c470d7cac55b17deffd0159ffab1e79505e295e0' => 
     array (
       0 => 'admin/header.tpl',
-      1 => 1741164066,
+      1 => 1741176627,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_67c81cfb93b4d6_14307404 (\Smarty\Template $_smarty_tpl) {
+function content_67c83f708ef277_99649209 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates/admin';
 ?><!DOCTYPE html>
 <html lang="<?php echo $_smarty_tpl->getValue('currentLang');?>
@@ -30,8 +30,8 @@ $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates/admin';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php ob_start();
 echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"admin_area"), $_smarty_tpl);
-$_prefixVariable2 = ob_get_clean();
-echo (($tmp = $_smarty_tpl->getValue('title') ?? null)===null||$tmp==='' ? $_prefixVariable2 ?? null : $tmp);?>
+$_prefixVariable1 = ob_get_clean();
+echo (($tmp = $_smarty_tpl->getValue('title') ?? null)===null||$tmp==='' ? $_prefixVariable1 ?? null : $tmp);?>
  - <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"site_name"), $_smarty_tpl);?>
 </title>
     <!-- Bootstrap 5 CSS -->
@@ -118,35 +118,59 @@ $_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
             <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link <?php if (!(true && ($_smarty_tpl->hasVariable('activeMenu') && null !== ($_smarty_tpl->getValue('activeMenu') ?? null))) || $_smarty_tpl->getValue('activeMenu') == 'dashboard') {?>active<?php }?>" href="index.php">
-                                <i class="bi bi-house-door"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php if ((true && ($_smarty_tpl->hasVariable('activeMenu') && null !== ($_smarty_tpl->getValue('activeMenu') ?? null))) && $_smarty_tpl->getValue('activeMenu') == 'users') {?>active<?php }?>" href="users.php">
-                                <i class="bi bi-people"></i> <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"users"), $_smarty_tpl);?>
+                        <?php
+$_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('adminMenu'), 'item');
+$foreach1DoElse = true;
+foreach ($_from ?? [] as $_smarty_tpl->getVariable('item')->value) {
+$foreach1DoElse = false;
+?>
+                            <li class="nav-item">
+                                <a class="nav-link <?php if ((true && ($_smarty_tpl->hasVariable('activeMenu') && null !== ($_smarty_tpl->getValue('activeMenu') ?? null))) && $_smarty_tpl->getValue('activeMenu') == $_smarty_tpl->getValue('item')['id']) {?>active<?php }?>" href="<?php echo $_smarty_tpl->getValue('item')['url'];?>
+">
+                                    <?php if ($_smarty_tpl->getValue('item')['icon']) {?><i class="bi bi-<?php echo $_smarty_tpl->getValue('item')['icon'];?>
+ me-1"></i><?php }?>
+                                    <?php echo $_smarty_tpl->getValue('item')['name'];?>
 
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php if ((true && ($_smarty_tpl->hasVariable('activeMenu') && null !== ($_smarty_tpl->getValue('activeMenu') ?? null))) && $_smarty_tpl->getValue('activeMenu') == 'groups') {?>active<?php }?>" href="groups.php">
-                                <i class="bi bi-people-fill"></i> <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"groups"), $_smarty_tpl);?>
+                                </a>
+                                
+                                <?php if (!( !true || empty($_smarty_tpl->getValue('item')['children']))) {?>
+                                    <ul class="nav flex-column ms-3">
+                                        <?php
+$_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('item')['children'], 'child');
+$foreach2DoElse = true;
+foreach ($_from ?? [] as $_smarty_tpl->getVariable('child')->value) {
+$foreach2DoElse = false;
+?>
+                                            <li class="nav-item">
+                                                <a class="nav-link <?php if ((true && ($_smarty_tpl->hasVariable('activeMenu') && null !== ($_smarty_tpl->getValue('activeMenu') ?? null))) && $_smarty_tpl->getValue('activeMenu') == $_smarty_tpl->getValue('child')['id']) {?>active<?php }?>" href="<?php echo $_smarty_tpl->getValue('child')['url'];?>
+">
+                                                    <?php if ($_smarty_tpl->getValue('child')['icon']) {?><i class="bi bi-<?php echo $_smarty_tpl->getValue('child')['icon'];?>
+ me-1"></i><?php }?>
+                                                    <?php echo $_smarty_tpl->getValue('child')['name'];?>
 
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php if ((true && ($_smarty_tpl->hasVariable('activeMenu') && null !== ($_smarty_tpl->getValue('activeMenu') ?? null))) && $_smarty_tpl->getValue('activeMenu') == 'settings') {?>active<?php }?>" href="settings.php">
-                                <i class="bi bi-gear"></i> <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"settings"), $_smarty_tpl);?>
-
-                            </a>
-                        </li>
+                                                </a>
+                                            </li>
+                                        <?php
+}
+$_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
+                                    </ul>
+                                <?php }?>
+                            </li>
+                        <?php
+}
+$_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
                     </ul>
                 </div>
             </div>
             
             <!-- Hauptinhalt -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <?php if ((true && (true && null !== ($_SESSION['error_message'] ?? null)))) {?>
+                    <div class="alert alert-danger mt-3">
+                        <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>$_SESSION['error_message']), $_smarty_tpl);?>
+
+                    </div>
+                                    <?php }?>
 
 <?php }
 }

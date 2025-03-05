@@ -73,30 +73,37 @@
             <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {if !isset($activeMenu) || $activeMenu == 'dashboard'}active{/if}" href="index.php">
-                                <i class="bi bi-house-door"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {if isset($activeMenu) && $activeMenu == 'users'}active{/if}" href="users.php">
-                                <i class="bi bi-people"></i> {translate key="users"}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {if isset($activeMenu) && $activeMenu == 'groups'}active{/if}" href="groups.php">
-                                <i class="bi bi-people-fill"></i> {translate key="groups"}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {if isset($activeMenu) && $activeMenu == 'settings'}active{/if}" href="settings.php">
-                                <i class="bi bi-gear"></i> {translate key="settings"}
-                            </a>
-                        </li>
+                        {foreach from=$adminMenu item=item}
+                            <li class="nav-item">
+                                <a class="nav-link {if isset($activeMenu) && $activeMenu == $item.id}active{/if}" href="{$item.url}">
+                                    {if $item.icon}<i class="bi bi-{$item.icon} me-1"></i>{/if}
+                                    {$item.name}
+                                </a>
+                                
+                                {if !empty($item.children)}
+                                    <ul class="nav flex-column ms-3">
+                                        {foreach from=$item.children item=child}
+                                            <li class="nav-item">
+                                                <a class="nav-link {if isset($activeMenu) && $activeMenu == $child.id}active{/if}" href="{$child.url}">
+                                                    {if $child.icon}<i class="bi bi-{$child.icon} me-1"></i>{/if}
+                                                    {$child.name}
+                                                </a>
+                                            </li>
+                                        {/foreach}
+                                    </ul>
+                                {/if}
+                            </li>
+                        {/foreach}
                     </ul>
                 </div>
             </div>
             
             <!-- Hauptinhalt -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                {if isset($smarty.session.error_message)}
+                    <div class="alert alert-danger mt-3">
+                        {translate key=$smarty.session.error_message}
+                    </div>
+                    {* Die Session-Variable wird in PHP gelöscht, nicht im Template *}
+                {/if}
 
