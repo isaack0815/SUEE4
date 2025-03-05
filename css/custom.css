@@ -1,0 +1,34 @@
+/* Allgemeine Stile */
+body {
+    background-color: #f8f9fa;
+  }
+  
+  /* Card-Schatten verstärken */
+  .card.shadow {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Formular-Stile */
+  .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  
+  /* Navbar-Stile */
+  .navbar-dark .navbar-brand {
+    font-weight: bold;
+  }
+  
+  /* Footer-Stile */
+  .card-footer {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  
+  /* Responsive Anpassungen */
+  @media (max-width: 576px) {
+    .card-header h4 {
+      font-size: 1.25rem;
+    }
+  }
+  
+  

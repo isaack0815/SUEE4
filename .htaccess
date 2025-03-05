@@ -1,0 +1,23 @@
+# Fehlerberichterstattung aktivieren
+php_flag display_errors on
+php_value error_reporting E_ALL
+
+# PHP-Einstellungen
+php_flag output_buffering on
+php_value memory_limit 256M
+php_value max_execution_time 300
+php_value post_max_size 20M
+php_value upload_max_filesize 20M
+
+# Verzeichnisschutz für sensible Verzeichnisse
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Verzeichnisschutz für Smarty-Verzeichnisse
+<FilesMatch "\.(tpl|smarty)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
