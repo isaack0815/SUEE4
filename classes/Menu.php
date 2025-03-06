@@ -154,14 +154,14 @@ class Menu {
            'area' => $data['area'],
            'parent_id' => $data['parent_id'] ?: null,
            'name' => $data['name'],
-           'description' => $data['description'] ?: null,
-           'module' => $data['module'] ?: null,
+           'description' => $data['description'] ?? null,
+           'module' => $data['module'] ?? null,
            'url' => $data['url'],
            'icon' => $data['icon'] ?: null,
            'sort_order' => $data['sort_order'] ?: 0,
            'is_active' => isset($data['is_active']) ? 1 : 0,
-           'required_group_id' => $data['required_group_id'] ?: null,
-           'required_permission_id' => $data['required_permission_id'] ?: null
+           'required_group_id' => $data['required_group_id'] ?? null,
+           'required_permission_id' => $data['required_permission_id'] ?? null
        ]);
        
        if ($menuId) {
