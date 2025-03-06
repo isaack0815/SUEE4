@@ -72,6 +72,41 @@ class Menu {
    }
    
    /**
+    * Alle Menüpunkte für die Verwaltung hierarchisch abrufen
+    * 
+    * @param string $area Optional: Nur Menüpunkte eines bestimmten Bereichs abrufen
+    * @return array Liste aller Menüpunkte in hierarchischer Struktur
+    */
+   public function getAllMenuItemsHierarchical($area = null) {
+       // Zuerst alle Menüpunkte abrufen
+       $allItems = $this->getAllMenuItems($area);
+       
+       // Menüpunkte nach ID indizieren
+       $itemsById = [];
+       foreach ($allItems as $item) {
+           $itemsById[$item['id']] = $item;
+           $itemsById[$item['id']]['children'] = [];
+       }
+       
+       // Hierarchie aufbauen
+       $rootItems = [];
+       foreach ($itemsById as $id => $item) {
+           if ($item['parent_id'] === null) {
+               $rootItems[$id] = &$itemsById[$id];
+           } else {
+               if (isset($itemsById[$item['parent_id']])) {
+                   $itemsById[$item['parent_id']]['children'][$id] = &$itemsById[$id];
+               } else {
+                   // Falls übergeordnetes Element nicht existiert, als Root-Element behandeln
+                   $rootItems[$id] = &$itemsById[$id];
+               }
+           }
+       }
+       
+       return $rootItems;
+   }
+   
+   /**
     * Alle Menüpunkte für die Verwaltung abrufen
     * 
     * @param string $area Optional: Nur Menüpunkte eines bestimmten Bereichs abrufen
@@ -93,7 +128,7 @@ class Menu {
                LEFT JOIN user_groups g ON m.required_group_id = g.id
                LEFT JOIN permissions perm ON m.required_permission_id = perm.id
                {$whereClause}
-               ORDER BY m.area, m.sort_order";
+               ORDER BY m.parent_id IS NULL DESC, m.parent_id, m.sort_order";
        return $this->db->select($sql, $params);
    }
    
@@ -249,4 +284,56 @@ class Menu {
        
        return false;
    }
+
+    /**
+     * Reihenfolge der Menüpunkte aktualisieren
+     * 
+     * @param array $items Array mit Menüpunkt-IDs, deren neuer Reihenfolge und übergeordnetem Menü
+     * @return array Ergebnis der Operation
+     */
+    public function updateMenuOrder($items) {
+        if (!is_array($items) || empty($items)) {
+            return ['success' => false, 'message' => 'invalid_data'];
+        }
+        
+        // Debug-Ausgabe
+        error_log("updateMenuOrder called with items: " . print_r($items, true));
+        
+        try {
+            foreach ($items as $item) {
+                if (!isset($item['id'])) {
+                    continue;
+                }
+                
+                $updateData = [];
+                
+                // Reihenfolge aktualisieren, wenn angegeben
+                if (isset($item['sort_order'])) {
+                    $updateData['sort_order'] = $item['sort_order'];
+                }
+                
+                // Übergeordnetes Menü aktualisieren, wenn angegeben
+                if (array_key_exists('parent_id', $item)) {
+                    $updateData['parent_id'] = ($item['parent_id'] === 'null' || $item['parent_id'] === '' || $item['parent_id'] === null) ? null : $item['parent_id'];
+                }
+                
+                // Nur aktualisieren, wenn es Änderungen gibt
+                if (!empty($updateData)) {
+                    error_log("Updating menu item {$item['id']} with data: " . print_r($updateData, true));
+                    $this->db->update('menu_items', 
+                        $updateData,
+                        'id = ?',
+                        [$item['id']]
+                    );
+                }
+            }
+            
+            return ['success' => true];
+        } catch (Exception $e) {
+            error_log("Error in updateMenuOrder: " . $e->getMessage());
+            return ['success' => false, 'message' => 'update_failed', 'error' => $e->getMessage()];
+        }
+    }
 }
+?>
+

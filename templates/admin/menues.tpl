@@ -29,15 +29,15 @@
                     <table class="table table-striped table-hover" id="menuTable">
                         <thead>
                             <tr>
+                                <th width="40"></th>
                                 <th>{translate key="menu_name"}</th>
                                 <th>{translate key="menu_url"}</th>
-                                <th>{translate key="menu_parent"}</th>
                                 <th>{translate key="menu_order"}</th>
                                 <th>{translate key="menu_active"}</th>
                                 <th>{translate key="actions"}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="menuTableBody">
                             <!-- Wird dynamisch mit JavaScript gefüllt -->
                         </tbody>
                     </table>
@@ -165,6 +165,7 @@
     </div>
 </div>
 
-<script src="../js/admin/menues.js"></script>
+<script src="../js/admin/menus.js"></script>
 
 {include file="admin/footer.tpl"}
+

@@ -30,6 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Seite anzeigen
-$smarty->display('index.tpl');
+$smarty->display('login.tpl');
 ?>
 

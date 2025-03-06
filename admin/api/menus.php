@@ -15,6 +15,13 @@ $menu = new Menu();
 // HTTP-Methode bestimmen
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Debug-Ausgabe
+error_log("API Request: Method=$method, GET=" . print_r($_GET, true));
+if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH' || $method === 'DELETE') {
+    $input = file_get_contents('php://input');
+    error_log("Request Body: $input");
+}
+
 // Antwort vorbereiten
 $response = ['success' => false, 'message' => 'invalid_request'];
 
@@ -28,6 +35,10 @@ switch ($method) {
             } else {
                 $response = ['success' => false, 'message' => 'menu_item_not_found'];
             }
+        } else if (isset($_GET['area']) && isset($_GET['hierarchical']) && $_GET['hierarchical'] == '1') {
+            // Hierarchische Menüpunkte eines bestimmten Bereichs abrufen
+            $menuItems = $menu->getAllMenuItemsHierarchical($_GET['area']);
+            $response = ['success' => true, 'data' => $menuItems];
         } else if (isset($_GET['area'])) {
             // Menüpunkte eines bestimmten Bereichs abrufen
             $menuItems = $menu->getAllMenuItems($_GET['area']);
@@ -111,9 +122,30 @@ switch ($method) {
         $result = $menu->deleteMenuItem($data['id']);
         $response = $result;
         break;
+        
+    case 'PATCH':
+       // Menüpunkt-Reihenfolge aktualisieren
+       if (!checkPermission($user, 'menu.edit')) {
+           $response = ['success' => false, 'message' => 'no_permission'];
+           break;
+       }
+       
+       $data = json_decode(file_get_contents('php://input'), true);
+       
+       if (isset($data['action']) && $data['action'] === 'update_order' && isset($data['items'])) {
+           $result = $menu->updateMenuOrder($data['items']);
+           $response = $result;
+       } else {
+           $response = ['success' => false, 'message' => 'invalid_action'];
+       }
+       break;
 }
+
+// Debug-Ausgabe
+error_log("API Response: " . json_encode($response));
 
 // Antwort senden
 header('Content-Type: application/json');
 echo json_encode($response);
 ?>
+

@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-05 13:20:34
+/* Smarty version 5.4.3, created on 2025-03-06 08:43:26
   from 'file:admin/menues.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c84192e078b7_64249893',
+  'unifunc' => 'content_67c9521e9afbd2_64800435',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'd6dc7a0d58f6b2cc54ab6e472cbd65c7939a41db' => 
     array (
       0 => 'admin/menues.tpl',
-      1 => 1741177233,
+      1 => 1741246995,
       2 => 'file',
     ),
   ),
@@ -22,7 +22,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
     'file:admin/footer.tpl' => 1,
   ),
 ))) {
-function content_67c84192e078b7_64249893 (\Smarty\Template $_smarty_tpl) {
+function content_67c9521e9afbd2_64800435 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates/admin';
 ob_start();
 echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"menu_management"), $_smarty_tpl);
@@ -65,11 +65,10 @@ $_smarty_tpl->renderSubTemplate("file:admin/header.tpl", $_smarty_tpl->cache_id,
                     <table class="table table-striped table-hover" id="menuTable">
                         <thead>
                             <tr>
+                                <th width="40"></th>
                                 <th><?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"menu_name"), $_smarty_tpl);?>
 </th>
                                 <th><?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"menu_url"), $_smarty_tpl);?>
-</th>
-                                <th><?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"menu_parent"), $_smarty_tpl);?>
 </th>
                                 <th><?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"menu_order"), $_smarty_tpl);?>
 </th>
@@ -79,7 +78,7 @@ $_smarty_tpl->renderSubTemplate("file:admin/header.tpl", $_smarty_tpl->cache_id,
 </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="menuTableBody">
                             <!-- Wird dynamisch mit JavaScript gefüllt -->
                         </tbody>
                     </table>
@@ -250,9 +249,11 @@ $_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
 </div>
 
 <?php echo '<script'; ?>
- src="../js/admin/menues.js"><?php echo '</script'; ?>
+ src="../js/admin/menus.js"><?php echo '</script'; ?>
 >
 
 <?php $_smarty_tpl->renderSubTemplate("file:admin/footer.tpl", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array(), (int) 0, $_smarty_current_dir);
-}
+?>
+
+<?php }
 }
