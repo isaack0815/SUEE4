@@ -37,12 +37,6 @@ class Database {
         return $this->conn;
     }
     
-    public function query($sql, $params = []) {
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
-    }
-    
     public function select($sql, $params = []) {
         $stmt = $this->query($sql, $params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -78,4 +72,67 @@ class Database {
         $params = array_merge($params, $whereParams);
         $this->query($sql, $params);
     }
+
+    public function query($sql, $params = []) {
+        try {
+            $stmt = $this->conn->prepare($sql);
+            
+            // Parameter binden
+            if (!empty($params)) {
+                foreach ($params as $key => $value) {
+                    // Bestimme den Datentyp für das Binding
+                    $type = PDO::PARAM_STR;
+                    if (is_int($value)) {
+                        $type = PDO::PARAM_INT;
+                    } elseif (is_bool($value)) {
+                        $type = PDO::PARAM_BOOL;
+                    } elseif (is_null($value)) {
+                        $type = PDO::PARAM_NULL;
+                    }
+                    
+                    // Wenn der Key ein Integer ist, ist es ein positionsbasierter Parameter
+                    if (is_int($key)) {
+                        $stmt->bindValue($key + 1, $value, $type);
+                    } else {
+                        // Benannter Parameter
+                        $stmt->bindValue(':' . $key, $value, $type);
+                    }
+                }
+            }
+            
+            $stmt->execute();
+            return $stmt;
+        } catch (PDOException $e) {
+            // Fehler protokollieren
+            error_log("Database Error: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    // Methode zum Schließen der Datenbankverbindung
+    public static function close() {
+        self::$instance = null;
+    }
+
+    // Statische Methoden für einfacheren Zugriff
+    public static function staticSelect($sql, $params = []) {
+        return self::getInstance()->select($sql, $params);
+    }
+    
+    public static function staticSelectOne($sql, $params = []) {
+        return self::getInstance()->selectOne($sql, $params);
+    }
+    
+    public static function staticInsert($table, $data) {
+        return self::getInstance()->insert($table, $data);
+    }
+    
+    public static function staticUpdate($table, $data, $where, $whereParams = []) {
+        return self::getInstance()->update($table, $data, $where, $whereParams);
+    }
+    
+    public static function staticQuery($sql, $params = []) {
+        return self::getInstance()->query($sql, $params);
+    }
 }
+

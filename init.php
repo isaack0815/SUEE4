@@ -24,6 +24,7 @@ $classFiles = [
     $rootPath . 'classes/Permission.php',
     $rootPath . 'classes/UserPreferences.php',
     $rootPath . 'classes/Dashboard.php',
+    $rootPath . 'classes/Theme.php',
   ];
 
 foreach ($classFiles as $file) {
@@ -74,6 +75,11 @@ $smarty->setTemplateDir($rootPath . TEMPLATE_DIR);
 $smarty->setCompileDir($rootPath . COMPILE_DIR);
 $smarty->setCacheDir($rootPath . CACHE_DIR);
 $smarty->setConfigDir($rootPath . CONFIG_DIR);
+
+// Theme setzen
+$theme = new Theme();
+$currentTheme = $theme->getCurrentTheme();
+$smarty->assign('currentTheme', $currentTheme);
 
 // Debug-Ausgabe für Smarty-Verzeichnisse
 error_log("Smarty Template-Verzeichnis: " . $rootPath . TEMPLATE_DIR);

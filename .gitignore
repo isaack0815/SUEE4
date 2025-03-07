@@ -1,3 +1,4 @@
-/template_c/*
-/template_c/.*
+/templates_c/*
+/templates_c/.*
+/temp/*
 config/config.php
