@@ -21,7 +21,9 @@ $classFiles = [
     $rootPath . 'classes/User.php',
     $rootPath . 'classes/Group.php',
     $rootPath . 'classes/Menu.php',
-    $rootPath . 'classes/Permission.php'
+    $rootPath . 'classes/Permission.php',
+    $rootPath . 'classes/UserPreferences.php',
+    $rootPath . 'classes/Dashboard.php',
   ];
 
 foreach ($classFiles as $file) {
