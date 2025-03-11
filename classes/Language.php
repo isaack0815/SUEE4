@@ -350,6 +350,39 @@ class Language {
         
         return ['success' => true];
     }
+
+    /**
+     * Lädt einen bestimmten Abschnitt von Sprachschlüsseln
+     * 
+     * @param string $section Name des Abschnitts (z.B. 'module_manager')
+     * @return array Array mit Sprachschlüsseln und Übersetzungen
+     */
+    public function loadSection($section) {
+        $sql = "SELECT lang_key, lang_value FROM language_strings 
+                WHERE lang_code = ? AND lang_key LIKE ?";
+        $result = $this->db->select($sql, [$this->currentLanguage, $section . '%']);
+        
+        $sectionTranslations = [];
+        foreach ($result as $row) {
+            // Extrahiere den Teil des Schlüssels nach dem Punkt
+            $key = $row['lang_key'];
+            if (strpos($key, '.') !== false) {
+                $parts = explode('.', $key);
+                $key = $parts[1];
+            } else {
+                // Wenn kein Punkt im Schlüssel, verwende den ganzen Schlüssel
+                $key = $row['lang_key'];
+            }
+            
+            $sectionTranslations[$key] = $row['lang_value'];
+        }
+        
+        return $sectionTranslations;
+    }
+
+    public function getTranslations() {
+        return $this->translations;
+    }
 }
 ?>
 
