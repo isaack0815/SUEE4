@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-06 14:14:57
+/* Smarty version 5.4.3, created on 2025-03-11 12:55:41
   from 'file:header.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c99fd1c44bb6_79761522',
+  'unifunc' => 'content_67d024bde1a296_18213953',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'b473e0060e5a8923b104c7cd62630caa0ed5a07e' => 
     array (
       0 => 'header.tpl',
-      1 => 1741266896,
+      1 => 1741693733,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_67c99fd1c44bb6_79761522 (\Smarty\Template $_smarty_tpl) {
+function content_67d024bde1a296_18213953 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates';
 ?><!DOCTYPE html>
 <html lang="<?php echo (($tmp = $_smarty_tpl->getValue('currentLang') ?? null)===null||$tmp==='' ? 'de' ?? null : $tmp);?>
@@ -28,8 +28,24 @@ $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates';
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta name="site_name" content="<?php echo $_smarty_tpl->getValue('generalSettings')['site_name'];?>
+">
    <title><?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"site_title"), $_smarty_tpl);?>
 </title>
+   
+      <?php
+$_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('metadata'), 'value', false, 'key');
+$foreach0DoElse = true;
+foreach ($_from ?? [] as $_smarty_tpl->getVariable('key')->value => $_smarty_tpl->getVariable('value')->value) {
+$foreach0DoElse = false;
+?>
+   <meta name="<?php echo $_smarty_tpl->getValue('key');?>
+" content="<?php echo $_smarty_tpl->getValue('value');?>
+">
+   <?php
+}
+$_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
+   
    <!-- Bootstrap 5 CSS -->
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
    <!-- Bootstrap Icons -->
@@ -54,9 +70,9 @@ $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates';
                     <ul class="navbar-nav me-auto">
                         <?php
 $_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('mainMenu'), 'item');
-$foreach0DoElse = true;
+$foreach1DoElse = true;
 foreach ($_from ?? [] as $_smarty_tpl->getVariable('item')->value) {
-$foreach0DoElse = false;
+$foreach1DoElse = false;
 ?>
                             <?php if (( !true || empty($_smarty_tpl->getValue('item')['children']))) {?>
                                 <li class="nav-item">
@@ -83,9 +99,9 @@ $foreach0DoElse = false;
 ">
                                         <?php
 $_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('item')['children'], 'child');
-$foreach1DoElse = true;
+$foreach2DoElse = true;
 foreach ($_from ?? [] as $_smarty_tpl->getVariable('child')->value) {
-$foreach1DoElse = false;
+$foreach2DoElse = false;
 ?>
                                             <li>
                                                 <a class="dropdown-item <?php if ((true && ($_smarty_tpl->hasVariable('activeMenuItem') && null !== ($_smarty_tpl->getValue('activeMenuItem') ?? null))) && (true && (true && null !== ($_smarty_tpl->getValue('activeMenuItem')['item'] ?? null))) && $_smarty_tpl->getValue('activeMenuItem')['item']['id'] == $_smarty_tpl->getValue('child')['id']) {?>active<?php }?>" 
@@ -117,9 +133,9 @@ $_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
                                 <?php
 $_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('availableLanguages'), 'lang');
-$foreach2DoElse = true;
+$foreach3DoElse = true;
 foreach ($_from ?? [] as $_smarty_tpl->getVariable('lang')->value) {
-$foreach2DoElse = false;
+$foreach3DoElse = false;
 ?>
                                     <li>
                                         <a class="dropdown-item <?php if ($_smarty_tpl->getValue('currentLang') == $_smarty_tpl->getValue('lang')) {?>active<?php }?>" href="?lang=<?php echo $_smarty_tpl->getValue('lang');?>
@@ -142,18 +158,11 @@ $_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
 
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li>
-                                        <a class="dropdown-item" href="profile.php">
-                                            <i class="bi bi-person-lines-fill"></i>
-                                            <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"profile"), $_smarty_tpl);?>
-
-                                        </a>
-                                    </li>
                                     <?php
 $_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('userMenu'), 'item');
-$foreach3DoElse = true;
+$foreach4DoElse = true;
 foreach ($_from ?? [] as $_smarty_tpl->getVariable('item')->value) {
-$foreach3DoElse = false;
+$foreach4DoElse = false;
 ?>
                                         <li>
                                             <a class="dropdown-item" href="<?php echo $_smarty_tpl->getValue('item')['url'];?>

@@ -118,7 +118,14 @@ class Logger {
                 VALUES (?, ?, ?, ?, ?, ?, NOW())
             ");
             
-            $stmt->execute([$level, $message, $context, $userId, $ip, $jsonData]);
+            $stmt->execute([
+                    $level, 
+                    $message, 
+                    $context, 
+                    $userId, 
+                    $ip, 
+                    $jsonData
+                ]);
             
             return true;
         } catch (PDOException $e) {

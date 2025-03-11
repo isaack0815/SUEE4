@@ -3,7 +3,14 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta name="site_name" content="{$generalSettings.site_name}">
    <title>{translate key="site_title"}</title>
+   
+   {* Dynamische Metadaten *}
+   {foreach $metadata as $key => $value}
+   <meta name="{$key}" content="{$value}">
+   {/foreach}
+   
    <!-- Bootstrap 5 CSS -->
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
    <!-- Bootstrap Icons -->
@@ -78,12 +85,6 @@
                                     {$currentUser.username}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                    <li>
-                                        <a class="dropdown-item" href="profile.php">
-                                            <i class="bi bi-person-lines-fill"></i>
-                                            {translate key="profile"}
-                                        </a>
-                                    </li>
                                     {foreach from=$userMenu item=item}
                                         <li>
                                             <a class="dropdown-item" href="{$item.url}">

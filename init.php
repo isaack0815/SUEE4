@@ -25,6 +25,7 @@ $classFiles = [
     $rootPath . 'classes/UserPreferences.php',
     $rootPath . 'classes/Dashboard.php',
     $rootPath . 'classes/Theme.php',
+    $rootPath . 'classes/Logger.php'
   ];
 
 foreach ($classFiles as $file) {
@@ -104,7 +105,6 @@ $userMenu = $menu->getMenuItems('user');
 $currentUrl = basename($_SERVER['PHP_SELF']);
 $activeMenuItem = $menu->getActiveMenuItem($mainMenu, $currentUrl);
 // Aktive Menüpunkte und deren Eltern markieren
-// Aktive Menüpunkte und deren Eltern markieren
 $activeMenuIds = [];
 if (!empty($activeMenuItem) && isset($activeMenuItem['item'])) {
   $activeMenuIds[] = $activeMenuItem['item']['id'];
@@ -118,6 +118,21 @@ if (!empty($activeMenuItem) && isset($activeMenuItem['item'])) {
 }
 $smarty->assign('activeMenuIds', $activeMenuIds);
 
+// Allgemeine Einstellungen laden
+$db = Database::getInstance();
+$generalSettings = [];
+$result = $db->select("SELECT setting_key, setting_value FROM settings WHERE category = 'general'");
+foreach ($result as $row) {
+    $generalSettings[$row['setting_key']] = $row['setting_value'];
+}
+
+// Metadaten laden
+$metadata = [];
+$result = $db->select("SELECT `meta_key`, `meta_value` FROM metadata");
+foreach ($result as $row) {
+    $metadata[$row['meta_key']] = $row['meta_value'];
+}
+
 // Globale Smarty-Variablen setzen
 $smarty->assign('currentLang', $lang->getCurrentLanguage());
 $smarty->assign('availableLanguages', $lang->getAvailableLanguages());
@@ -129,6 +144,8 @@ $smarty->assign('user', $user);
 $smarty->assign('mainMenu', $mainMenu);
 $smarty->assign('userMenu', $userMenu);
 $smarty->assign('activeMenuItem', $activeMenuItem);
+$smarty->assign('generalSettings', $generalSettings);
+$smarty->assign('metadata', $metadata);
 
 // Übersetzungsfunktion für Smarty
 $smarty->registerPlugin('function', 'translate', function($params, $smarty) {
@@ -137,3 +154,4 @@ $smarty->registerPlugin('function', 'translate', function($params, $smarty) {
   unset($params['key']);
   return $lang->translate($key, $params);
 });
+
