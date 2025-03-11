@@ -108,6 +108,10 @@ class Database {
             throw $e;
         }
     }
+
+    public function lastInsertId(){
+        return $this->conn->lastInsertId();
+    }
     
     // Methode zum Schließen der Datenbankverbindung
     public static function close() {

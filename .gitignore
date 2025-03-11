@@ -1,4 +1,5 @@
 /templates_c/*
 /templates_c/.*
 /temp/*
+/test/*
 config/config.php

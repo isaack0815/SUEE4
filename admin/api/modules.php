@@ -1,96 +1,83 @@
 <?php
-/**
- * Module Management API
- */
 require_once '../../init.php';
 
 // Check if user is logged in and has admin permissions
-if (!$auth->isLoggedIn() || !$auth->hasPermission('admin_access')) {
+if (!$user->isLoggedIn() || !$user->hasPermission('admin_access')) {
     echo json_encode(['success' => false, 'message' => $lang->get('common', 'access_denied')]);
     exit;
 }
 
-// Load language file
-$lang->load('modules');
+header('Content-Type: application/json');
 
-// Create ModuleManager instance
-$moduleManager = new ModuleManager($db, $lang);
-
-// Get action
-$action = isset($_POST['action']) ? $_POST['action'] : '';
-
-// Response array
-$response = ['success' => false, 'message' => $lang->get('modules', 'invalid_action')];
-
-switch ($action) {
-    case 'list':
-        // Get all modules
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (isset($_GET['action']) && $_GET['action'] === 'list') {
         $modules = $moduleManager->getAllModules();
-        $response = ['success' => true, 'modules' => $modules];
-        break;
-        
-    case 'upload':
-        // Check if file was uploaded
-        if (!isset($_FILES['module_file']) || $_FILES['module_file']['error'] !== UPLOAD_ERR_OK) {
-            $response['message'] = $lang->get('modules', 'error_upload');
-            break;
-        }
-        
-        // Upload and install module
-        if ($moduleManager->uploadModule($_FILES['module_file'])) {
-            $response = ['success' => true, 'message' => $lang->get('modules', 'upload_success')];
-        } else {
-            $response = ['success' => false, 'message' => implode('<br>', $moduleManager->getErrors())];
-        }
-        break;
-        
-    case 'activate':
-        // Check if module ID is provided
-        if (!isset($_POST['module_id']) || !is_numeric($_POST['module_id'])) {
-            $response['message'] = $lang->get('modules', 'invalid_module_id');
-            break;
-        }
-        
-        // Activate module
-        if ($moduleManager->activateModule($_POST['module_id'])) {
-            $response = ['success' => true, 'message' => $lang->get('modules', 'activate_success')];
-        } else {
-            $response = ['success' => false, 'message' => implode('<br>', $moduleManager->getErrors())];
-        }
-        break;
-        
-    case 'deactivate':
-        // Check if module ID is provided
-        if (!isset($_POST['module_id']) || !is_numeric($_POST['module_id'])) {
-            $response['message'] = $lang->get('modules', 'invalid_module_id');
-            break;
-        }
-        
-        // Deactivate module
-        if ($moduleManager->deactivateModule($_POST['module_id'])) {
-            $response = ['success' => true, 'message' => $lang->get('modules', 'deactivate_success')];
-        } else {
-            $response = ['success' => false, 'message' => implode('<br>', $moduleManager->getErrors())];
-        }
-        break;
-        
-    case 'uninstall':
-        // Check if module ID is provided
-        if (!isset($_POST['module_id']) || !is_numeric($_POST['module_id'])) {
-            $response['message'] = $lang->get('modules', 'invalid_module_id');
-            break;
-        }
-        
-        // Uninstall module
-        if ($moduleManager->uninstallModule($_POST['module_id'])) {
-            $response = ['success' => true, 'message' => $lang->get('modules', 'uninstall_success')];
-        } else {
-            $response = ['success' => false, 'message' => implode('<br>', $moduleManager->getErrors())];
-        }
-        break;
+        echo json_encode($modules);
+    } elseif (isset($_GET['action']) && $_GET['action'] === 'get' && isset($_GET['id'])) {
+        $module = $moduleManager->getModule($_GET['id']);
+        echo json_encode($module);
+    }
 }
 
-// Return JSON response
-header('Content-Type: application/json');
-echo json_encode($response);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'upload') {
+        if (isset($_FILES['module']) && $_FILES['module']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../upload/modules/';
+            $tempFile = $_FILES['module']['tmp_name'];
+            $originalName = $_FILES['module']['name'];
+            
+            // Generiere einen eindeutigen Dateinamen
+            $uniqueName = uniqid('module_') . '.zip';
+            $uploadFile = $uploadDir . $uniqueName;
+
+            if (move_uploaded_file($tempFile, $uploadFile)) {
+                $zip = new ZipArchive;
+                if ($zip->open($uploadFile) === TRUE) {
+                    $infoFile = $zip->getFromName('info.php');
+                    if ($infoFile !== false) {
+                        $moduleInfo = eval('?>' . $infoFile);
+                        if (is_array($moduleInfo)) {
+                            // Füge das Modul zur Datenbank hinzu
+                            $stmt = $pdo->prepare("INSERT INTO system_modules (name, description, version, file_path, status) VALUES (?, ?, ?, ?, 'inactive')");
+                            $stmt->execute([$moduleInfo['name'], $moduleInfo['description'], $moduleInfo['version'], $uniqueName]);
+                            
+                            echo json_encode(['success' => true, 'message' => 'Modul erfolgreich hochgeladen.']);
+                        } else {
+                            echo json_encode(['success' => false, 'message' => 'Ungültige info.php Datei.']);
+                        }
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'info.php nicht gefunden in der ZIP-Datei.']);
+                    }
+                    $zip->close();
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Fehler beim Öffnen der ZIP-Datei.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Fehler beim Hochladen der Datei.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Keine Datei hochgeladen oder Fehler beim Upload.']);
+        }
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'install' && isset($_POST['id'])) {
+        $result = $moduleManager->installModule($_POST['id']);
+        echo json_encode($result);
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'uninstall' && isset($_POST['id'])) {
+        $result = $moduleManager->uninstallModule($_POST['id']);
+        echo json_encode($result);
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'activate' && isset($_POST['id'])) {
+        $result = $moduleManager->activateModule($_POST['id']);
+        echo json_encode($result);
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'deactivate' && isset($_POST['id'])) {
+        $result = $moduleManager->deactivateModule($_POST['id']);
+        echo json_encode($result);
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    parse_str(file_get_contents("php://input"), $deleteVars);
+    if (isset($deleteVars['id'])) {
+        $result = $moduleManager->deleteModule($deleteVars['id']);
+        echo json_encode($result);
+    }
+}
 

@@ -1,11 +1,15 @@
 <?php
 require_once '../init.php';
 require_once '../includes/auth_check.php';
-require_once '../classes/ModulManager.php';
+require_once '../classes/ModuleManager.php'; // Korrigiert: "Module" statt "Modul"
+require_once '../classes/Logger.php';
+
+$moduleManager = new ModuleManager();
+$logger = Logger::getInstance();
 
 // Überprüfen, ob der Benutzer angemeldet ist
 if (!$user->isLoggedIn()) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -19,87 +23,239 @@ if (!$user->hasPermission('admin_access')) {
 $menu = new Menu();
 $adminMenu = $menu->getMenuItems('admin');
 
-// ModuleManager-Instanz erstellen
-$moduleManager = new ModuleManager();
+// Aktuelle Aktion bestimmen
+$action = isset($_GET['action']) ? $_GET['action'] : 'list';
 
-// Standardmäßig Dashboard-Module anzeigen
-$moduleType = isset($_GET['type']) ? $_GET['type'] : ModuleManager::TYPE_DASHBOARD;
+// Meldungen initialisieren
+$message = '';
+$error = '';
 
-// Aktion verarbeiten
-if (isset($_POST['action'])) {
-    $action = $_POST['action'];
-    $response = ['success' => false, 'message' => 'Unbekannte Aktion'];
-    
-    switch ($action) {
-        case 'upload':
-            if (isset($_FILES['module']) && $_FILES['module']['error'] === UPLOAD_ERR_OK) {
-                $uploadType = isset($_POST['module_type']) ? $_POST['module_type'] : ModuleManager::TYPE_DASHBOARD;
-                $uploadResult = $moduleManager->uploadModule($_FILES['module'], $uploadType);
+// Aktionen verarbeiten
+switch ($action) {
+    case 'upload':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_FILES['module_file']) && $_FILES['module_file']['error'] === UPLOAD_ERR_OK) {
+                // Modultyp aus dem Formular abrufen
+                $type = isset($_POST['module_type']) ? $_POST['module_type'] : ModuleManager::TYPE_DASHBOARD;
+                
+                // Modul hochladen und in der Datenbank registrieren
+                $uploadResult = $moduleManager->uploadModule($_FILES['module_file'], $type);
                 
                 if ($uploadResult['success']) {
-                    // Modul-Details in der Session speichern
-                    $_SESSION['module_upload'] = $uploadResult;
-                    $response = ['success' => true, 'message' => 'Modul erfolgreich hochgeladen. Bitte bestätigen Sie die Installation.'];
+                    $message = 'Modul erfolgreich hochgeladen. Sie können es jetzt installieren.';
+                    $logger->info("Modul erfolgreich hochgeladen", "admin", [
+                        'name' => $uploadResult['details']['name'],
+                        'type' => $type
+                    ]);
                 } else {
-                    $response = $uploadResult;
+                    $error = 'Fehler beim Hochladen des Moduls: ' . $uploadResult['message'];
+                    $logger->error("Fehler beim Hochladen des Moduls", "admin", [
+                        'error' => $uploadResult['message']
+                    ]);
                 }
             } else {
-                $response = ['success' => false, 'message' => 'Keine Datei hochgeladen oder Fehler beim Upload.'];
+                $uploadError = $_FILES['module_file']['error'] ?? 'Unbekannter Fehler';
+                $error = 'Fehler beim Hochladen der Datei: ' . getUploadErrorMessage($uploadError);
+                $logger->error("Fehler beim Hochladen der Datei", "admin", [
+                    'error_code' => $uploadError
+                ]);
             }
-            break;
+        }
+        // Nach dem Upload zur Liste weiterleiten
+        header('Location: module-manager.php?message=' . urlencode($message) . '&error=' . urlencode($error));
+        exit;
+        break;
+
+    case 'install':
+        if (isset($_GET['id']) && isset($_GET['type'])) {
+            define('INSTALL_SCRIPT', true);
+            $moduleId = $_GET['id'];
+            $type = $_GET['type'];
             
-        case 'install':
-            if (isset($_SESSION['module_upload']) && $_SESSION['module_upload']['success']) {
-                $installResult = $moduleManager->installModule($_SESSION['module_upload']);
-                unset($_SESSION['module_upload']);
+            $installResult = $moduleManager->installModule($moduleId, $type);
+            
+            if ($installResult['success']) {
+                $message = 'Modul erfolgreich installiert.';
+                $logger->info("Modul erfolgreich installiert", "admin", [
+                    'id' => $moduleId,
+                    'type' => $type
+                ]);
                 
-                $response = $installResult;
+                // Installationsdetails für das Modal speichern
+                $_SESSION['installation_details'] = $installResult['details'] ?? null;
+                
+                // Weiterleitung mit Parameter für das Modal
+                header('Location: module-manager.php?message=' . urlencode($message) . '&show_details=1');
+                exit;
             } else {
-                $response = ['success' => false, 'message' => 'Keine Modul-Informationen gefunden.'];
+                $error = 'Fehler bei der Installation des Moduls: ' . $installResult['message'];
+                $logger->error("Fehler bei der Installation des Moduls", "admin", [
+                    'id' => $moduleId,
+                    'type' => $type,
+                    'error' => $installResult['message']
+                ]);
+                
+                // Installationsdetails für das Modal speichern
+                $_SESSION['installation_details'] = $installResult['details'] ?? null;
+                
+                // Weiterleitung mit Parameter für das Modal
+                header('Location: module-manager.php?error=' . urlencode($error) . '&show_details=1');
+                exit;
             }
-            break;
+        } else {
+            $error = 'Fehlende Parameter für die Installation.';
+            header('Location: module-manager.php?error=' . urlencode($error));
+            exit;
+        }
+        break;
+
+    case 'uninstall':
+        if (isset($_GET['id']) && isset($_GET['type'])) {
+            $moduleId = $_GET['id'];
+            $type = $_GET['type'];
             
-        case 'uninstall':
-            if (isset($_POST['module_id'])) {
-                $moduleId = (int)$_POST['module_id'];
-                $uninstallType = isset($_POST['module_type']) ? $_POST['module_type'] : ModuleManager::TYPE_DASHBOARD;
-                $uninstallResult = $moduleManager->uninstallModule($moduleId, $uninstallType);
-                $response = $uninstallResult;
-            } else {
-                $response = ['success' => false, 'message' => 'Keine Modul-ID angegeben.'];
-            }
-            break;
+            $uninstallResult = $moduleManager->uninstallModule($moduleId, $type);
             
-        case 'toggle_active':
-            if (isset($_POST['module_id']) && isset($_POST['is_active'])) {
-                $moduleId = (int)$_POST['module_id'];
-                $isActive = (bool)$_POST['is_active'];
-                $toggleType = isset($_POST['module_type']) ? $_POST['module_type'] : ModuleManager::TYPE_DASHBOARD;
-                $toggleResult = $moduleManager->toggleModuleActive($moduleId, $isActive, $toggleType);
-                $response = $toggleResult;
+            if ($uninstallResult['success']) {
+                $message = 'Modul erfolgreich deinstalliert.';
+                $logger->info("Modul erfolgreich deinstalliert", "admin", [
+                    'id' => $moduleId,
+                    'type' => $type
+                ]);
             } else {
-                $response = ['success' => false, 'message' => 'Fehlende Parameter.'];
+                $error = 'Fehler bei der Deinstallation des Moduls: ' . $uninstallResult['message'];
+                $logger->error("Fehler bei der Deinstallation des Moduls", "admin", [
+                    'id' => $moduleId,
+                    'type' => $type,
+                    'error' => $uninstallResult['message']
+                ]);
             }
-            break;
-    }
-    
-    // JSON-Antwort senden
-    header('Content-Type: application/json');
-    echo json_encode($response);
-    exit;
+        } else {
+            $error = 'Fehlende Parameter für die Deinstallation.';
+        }
+        header('Location: module-manager.php?message=' . urlencode($message) . '&error=' . urlencode($error));
+        exit;
+        break;
+
+    case 'delete':
+        if (isset($_GET['id']) && isset($_GET['type'])) {
+            $moduleId = $_GET['id'];
+            $type = $_GET['type'];
+            
+            $deleteResult = $moduleManager->deleteModule($moduleId, $type);
+            
+            if ($deleteResult['success']) {
+                $message = 'Modul erfolgreich gelöscht.';
+                $logger->info("Modul erfolgreich gelöscht", "admin", [
+                    'id' => $moduleId,
+                    'type' => $type
+                ]);
+            } else {
+                $error = 'Fehler beim Löschen des Moduls: ' . $deleteResult['message'];
+                $logger->error("Fehler beim Löschen des Moduls", "admin", [
+                    'id' => $moduleId,
+                    'type' => $type,
+                    'error' => $deleteResult['message']
+                ]);
+            }
+        } else {
+            $error = 'Fehlende Parameter für das Löschen.';
+        }
+        header('Location: module-manager.php?message=' . urlencode($message) . '&error=' . urlencode($error));
+        exit;
+        break;
+
+    case 'toggle':
+        if (isset($_GET['id']) && isset($_GET['type']) && isset($_GET['active'])) {
+            $moduleId = $_GET['id'];
+            $type = $_GET['type'];
+            $active = $_GET['active'] == '1';
+            
+            $toggleResult = $moduleManager->toggleModuleActive($moduleId, $active, $type);
+            
+            if ($toggleResult['success']) {
+                $message = $active ? 'Modul erfolgreich aktiviert.' : 'Modul erfolgreich deaktiviert.';
+                $logger->info($message, "admin", [
+                    'id' => $moduleId,
+                    'type' => $type
+                ]);
+            } else {
+                $error = 'Fehler beim ' . ($active ? 'Aktivieren' : 'Deaktivieren') . ' des Moduls: ' . $toggleResult['message'];
+                $logger->error($error, "admin", [
+                    'id' => $moduleId,
+                    'type' => $type,
+                    'error' => $toggleResult['message']
+                ]);
+            }
+        } else {
+            $error = 'Fehlende Parameter für die Aktivierung/Deaktivierung.';
+        }
+        header('Location: module-manager.php?message=' . urlencode($message) . '&error=' . urlencode($error));
+        exit;
+        break;
+
+    case 'list':
+    default:
+        // Module nach Typ filtern
+        $type = isset($_GET['type']) ? $_GET['type'] : null;
+        
+        // Dashboard-Module abrufen
+        $dashboardModules = $moduleManager->getAllModules(ModuleManager::TYPE_DASHBOARD);
+        $smarty->assign('dashboard_modules', $dashboardModules);
+        
+        // System-Module abrufen
+        $systemModules = $moduleManager->getAllModules(ModuleManager::TYPE_SYSTEM);
+        $smarty->assign('system_modules', $systemModules);
+        
+        // Aktuellen Typ setzen
+        $smarty->assign('current_type', $type);
+        
+        // Installationsdetails aus der Session abrufen und an Smarty übergeben
+        if (isset($_SESSION['installation_details'])) {
+            $smarty->assign('installation_details', $_SESSION['installation_details']);
+            unset($_SESSION['installation_details']); // Details aus der Session entfernen
+        }
+        
+        // Modal anzeigen, wenn Parameter vorhanden
+        $smarty->assign('show_details_modal', isset($_GET['show_details']));
+        break;
 }
 
-// Module aus der Datenbank abrufen
-$dashboardModules = $moduleManager->getAllModules(ModuleManager::TYPE_DASHBOARD);
-$systemModules = $moduleManager->getAllModules(ModuleManager::TYPE_SYSTEM);
+// Nachrichten aus URL-Parametern
+if (isset($_GET['message'])) {
+    $message = $_GET['message'];
+}
+if (isset($_GET['error'])) {
+    $error = $_GET['error'];
+}
 
-// Smarty-Template anzeigen
+// Variablen an Smarty übergeben
 $smarty->assign('adminMenu', $adminMenu);
-$smarty->assign('activeMenu', 'modules');
-$smarty->assign('dashboardModules', $dashboardModules);
-$smarty->assign('systemModules', $systemModules);
-$smarty->assign('moduleType', $moduleType);
-$smarty->assign('pageTitle', 'Modul-Manager');
+$smarty->assign('message', $message);
+$smarty->assign('error', $error);
+
+// Template anzeigen
 $smarty->display('admin/module-manager.tpl');
-?>
+
+// Hilfsfunktion für Upload-Fehlermeldungen
+function getUploadErrorMessage($errorCode) {
+    switch ($errorCode) {
+        case UPLOAD_ERR_INI_SIZE:
+            return 'Die hochgeladene Datei überschreitet die in der php.ini festgelegte upload_max_filesize Direktive.';
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'Die hochgeladene Datei überschreitet die im HTML-Formular festgelegte MAX_FILE_SIZE Direktive.';
+        case UPLOAD_ERR_PARTIAL:
+            return 'Die hochgeladene Datei wurde nur teilweise hochgeladen.';
+        case UPLOAD_ERR_NO_FILE:
+            return 'Es wurde keine Datei hochgeladen.';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Temporärer Ordner fehlt.';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'Fehler beim Schreiben der Datei auf die Festplatte.';
+        case UPLOAD_ERR_EXTENSION:
+            return 'Eine PHP-Erweiterung hat den Upload der Datei gestoppt.';
+        default:
+            return 'Unbekannter Upload-Fehler.';
+    }
+}
 
