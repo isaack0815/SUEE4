@@ -1,19 +1,19 @@
-{* Post Creation/Editing Template *}
+{include file="header.tpl" title=$page_title}
 
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="forum.php">Forum</a></li>
             {if $action == 'edit'}
-                <li class="breadcrumb-item"><a href="forum_forum.php?id={$topic.forum_id}">{$topic.forum_name}</a></li>
-                <li class="breadcrumb-item"><a href="forum_topic.php?id={$topicId}">{$topic.title}</a></li>
+                <li class="breadcrumb-item"><a href="forum_forum.php?id={$details.forum_id}">{$details.forum_name}</a></li>
+                <li class="breadcrumb-item"><a href="forum_topic.php?id={$topicId}">{$details.title}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Beitrag bearbeiten</li>
             {elseif $topicId > 0}
-                <li class="breadcrumb-item"><a href="forum_forum.php?id={$topic.forum_id}">{$topic.forum_name}</a></li>
-                <li class="breadcrumb-item"><a href="forum_topic.php?id={$topicId}">{$topic.title}</a></li>
+                <li class="breadcrumb-item"><a href="forum_forum.php?id={$details.forum_id}">{$details.forum_name}</a></li>
+                <li class="breadcrumb-item"><a href="forum_topic.php?id={$details}">{$details.title}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Antwort schreiben</li>
             {else}
-                <li class="breadcrumb-item"><a href="forum_forum.php?id={$forumId}">{$forum.name}</a></li>
+                <li class="breadcrumb-item"><a href="forum_forum.php?id={$forumId}">{$details.name}</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Neues Thema</li>
             {/if}
         </ol>
@@ -31,7 +31,7 @@
     
     <div class="card">
         <div class="card-body">
-            <form action="{if $action == 'edit'}forum_post.php?action=edit&post={$post.id}{else}forum_post.php{/if}" method="post">
+            <form action="{if $action == 'edit'}forum_post.php?action=edit&post={$post.id}{else}forum_post.php?action=new&topic={$topicId}&forum={$forumId}{/if}" method="post">
                 <input type="hidden" name="action" value="{$action}">
                 {if $topicId > 0}
                     <input type="hidden" name="topic" value="{$topicId}">

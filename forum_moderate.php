@@ -6,10 +6,16 @@
  */
 
 // Include necessary files
+require_once 'init.php';
+require_once 'includes/auth_check.php';
+
+$db = Database::getInstance($db);
 require_once 'classes/Forum.php';
 
+
+
 // Initialize the Forum class
-$forum = new Forum();
+$forum = new Forum($db);
 
 // Check if the user is logged in and has moderation permissions
 if (!isset($_SESSION['user_id']) || !$forum->isModerator($_SESSION['user_id'])) {

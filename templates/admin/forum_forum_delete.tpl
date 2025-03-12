@@ -1,4 +1,4 @@
-{* Forum Forum Delete Template *}
+{include file="admin/header.tpl" title={translate key="forum_forum_delete"}}
 
 <div class="container-fluid mt-4">
     <h1 class="mb-4">Forum löschen</h1>
@@ -25,3 +25,4 @@
     </div>
 </div>
 
+{include file="admin/footer.tpl"}

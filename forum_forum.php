@@ -19,14 +19,18 @@ $forum = new Forum($db);
 $forumId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Check if the forum exists
-if (!$forum->forumExists($forumId)) {
+if (!$forum->forumExists($forumId)) { 
     // Redirect to the main forum page
     header('Location: forum.php');
     exit;
 }
 
 // Get the forum details
-$forumDetails = $forum->getForumDetails($forumId);
+$forumDetails = $forum->getForumDetails($forumId,$_SESSION['user_id']);
+if(empty($forumDetails['is_subscribed'])){
+    // Redirect to the main forum page
+    $forumDetails['is_subscribed'] = false;
+}
 
 // Get the topics in this forum
 $topics = $forum->getTopics($forumId);

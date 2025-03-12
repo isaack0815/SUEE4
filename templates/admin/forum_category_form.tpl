@@ -1,4 +1,4 @@
-{* Forum Category Form Template *}
+{include file="admin/header.tpl" title={translate key="forum_category_form"}}
 
 <div class="container-fluid mt-4">
     <h1 class="mb-4">{if $category.id}Kategorie bearbeiten{else}Neue Kategorie{/if}</h1>
@@ -40,3 +40,4 @@
     </div>
 </div>
 
+{include file="admin/footer.tpl"}

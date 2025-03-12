@@ -1,4 +1,4 @@
-{* Forum Forum Form Template *}
+{include file="admin/header.tpl" title={translate key="forum_forum_forum"}}
 
 <div class="container-fluid mt-4">
     <h1 class="mb-4">{if $forum.id}Forum bearbeiten{else}Neues Forum{/if}</h1>
@@ -21,7 +21,7 @@
                     <select class="form-select" id="category_id" name="category_id" required>
                         <option value="">-- Kategorie auswählen --</option>
                         {foreach from=$categories item=category}
-                            <option value="{$category.id}" {if $forum.category_id == $category.id}selected{/if}>{$category.name}</option>
+                            <option value="{$category.id}" {if $forum.id == $category.id}selected{/if}>{$category.name}</option>
                         {/foreach}
                     </select>
                 </div>
@@ -50,3 +50,4 @@
     </div>
 </div>
 
+{include file="admin/footer.tpl"}

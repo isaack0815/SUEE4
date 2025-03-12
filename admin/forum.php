@@ -6,7 +6,23 @@
  */
 
 // Include necessary files
+require_once '../init.php';
+require_once '../includes/auth_check.php';
 require_once '../classes/ForumAdmin.php';
+
+if (!$user->isLoggedIn()) {
+    header('Location: ../index.php');
+    exit;
+}
+
+checkPermission($_SESSION['user_id'],'forum_admin');
+
+
+// Menü laden
+$menu = new Menu();
+$adminMenu = $menu->getMenuItems('admin');
+
+$smarty->assign('adminMenu', $adminMenu);
 
 // Initialize the ForumAdmin class
 $forumAdmin = new ForumAdmin();
@@ -36,6 +52,7 @@ switch ($action) {
         
         // Get the category details (for editing)
         $category = [];
+        $category['id'] = $categoryId;
         if ($categoryId > 0) {
             $category = $forumAdmin->getCategoryDetails($categoryId);
         }
@@ -119,12 +136,13 @@ switch ($action) {
         break;
         
     case 'category_delete_confirm':
+        
         // Get the category ID from the URL
         $categoryId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         
         // Delete the category
         $result = $forumAdmin->deleteCategory($categoryId);
-        
+        print_r($result);
         if ($result) {
             // Redirect to the category list
             header('Location: forum.php?action=list');
@@ -151,13 +169,13 @@ switch ($action) {
         
         // Get the forum details (for editing)
         $forum = [];
+        $forum['id'] = $forumId;
         if ($forumId > 0) {
             $forum = $forumAdmin->getForumDetails($forumId);
         }
         
         // Get all categories
         $categories = $forumAdmin->getCategories();
-        
         // Set template variables
         $smarty->assign('forum', $forum);
         $smarty->assign('categories', $categories);
@@ -251,7 +269,7 @@ switch ($action) {
     case 'forum_delete_confirm':
         // Get the forum ID from the URL
         $forumId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
+        echo 'actionID: '.$forumId.'<br>';
         // Delete the forum
         $result = $forumAdmin->deleteForum($forumId);
         

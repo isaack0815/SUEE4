@@ -14,7 +14,8 @@ if (!isset($user) || !$user->isLoggedIn()) {
  * @return bool True, wenn der Benutzer die Berechtigung hat
  */
 function checkPermission($user, $permissionName) {
-    return $user->hasPermission($permissionName);
+    global $user;
+    return $user->hasPermission($permissionName); 
 }
 
 /**

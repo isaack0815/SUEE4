@@ -1,4 +1,4 @@
-{* Topic Display Template *}
+{include file="header.tpl" title=$page_title}
 
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
@@ -112,8 +112,8 @@
                 <h5 class="mb-0">Antwort schreiben</h5>
             </div>
             <div class="card-body">
-                <form action="forum_post.php" method="post">
-                    <input type="hidden" name="action" value="new">
+                <form action="forum_post.php?id={$topic.id}&action=newpost&topic={$topic.id}" method="post">
+                    <input type="hidden" name="action" value="newpost">
                     <input type="hidden" name="topic" value="{$topic.id}">
                     
                     <div class="mb-3">
@@ -131,8 +131,9 @@
         </div>
     {elseif !isset($smarty.session.user_id)}
         <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Sie müssen <a href="login.php?redirect={$smarty.server.REQUEST_URI|urlencode}">angemeldet sein</a>, um auf dieses Thema antworten zu können.
+            <i class="bi bi-info-circle"></i> Sie müssen <a href="login.php?redirect={$smarty.server.REQUEST_URI|escape:'url'}">angemeldet sein</a>, um auf dieses Thema antworten zu können.
         </div>
     {/if}
 </div>
 
+{include file="footer.tpl"}

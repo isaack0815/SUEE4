@@ -6,10 +6,14 @@
  */
 
 // Include necessary files
+require_once 'init.php';
+require_once 'includes/auth_check.php';
+
+$db = Database::getInstance();
 require_once 'classes/Forum.php';
 
 // Initialize the Forum class
-$forum = new Forum();
+$forum = new Forum($db);
 
 // Get the topic ID from the URL
 $topicId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -21,8 +25,9 @@ if (!$forum->topicExists($topicId)) {
     exit;
 }
 
+
 // Get the topic details
-$topicDetails = $forum->getTopicDetails($topicId);
+$topicDetails = $forum->getTopicDetails($_SESSION['user_id'],$topicId);
 
 // Get the posts in this topic
 $posts = $forum->getPosts($topicId);
@@ -31,6 +36,7 @@ $posts = $forum->getPosts($topicId);
 $forum->updateTopicViews($topicId);
 
 // Set template variables
+$smarty->assign('is_moderator', $forum->isModerator($_SESSION['user_id']));
 $smarty->assign('topic', $topicDetails);
 $smarty->assign('posts', $posts);
 $smarty->assign('pageTitle', $topicDetails['title']);

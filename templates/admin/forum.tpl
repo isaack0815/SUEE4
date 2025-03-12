@@ -1,4 +1,4 @@
-{* Forum Admin Template *}
+{include file="admin/header.tpl" title={translate key="admin_forum"}}
 
 <div class="container-fluid mt-4">
     <h1 class="mb-4">Forum Administration</h1>
@@ -8,7 +8,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Kategorien</h5>
-                    <a href="forum.php?action=category_form" class="btn btn-sm btn-primary">Neue Kategorie</a>
+                    <a href="forum.php?action=category_form" class="btn btn-sm btn-primary">Neues Forum</a>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0">
@@ -35,7 +35,7 @@
                                 <tr>
                                     <td colspan="4" class="text-center">Keine Kategorien vorhanden</td>
                                 </tr>
-                            {/foreach}
+                            {/foreach} 
                         </tbody>
                     </table>
                 </div>
@@ -46,7 +46,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Foren</h5>
-                    <a href="forum.php?action=forum_form" class="btn btn-sm btn-primary">Neues Forum</a>
+                    <a href="forum.php?action=forum_form" class="btn btn-sm btn-primary">Neue Kategorie</a>
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0">
@@ -82,3 +82,4 @@
     </div>
 </div>
 
+{include file="admin/footer.tpl"}

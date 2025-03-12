@@ -26,8 +26,7 @@ class ForumAdmin {
     public function getCategories() {
         $categories = [];
         
-        $stmt = $this->db->prepare("SELECT * FROM forum_categories ORDER BY sort_order");
-        $stmt->execute();
+        $stmt = $this->db->query("SELECT * FROM forum_categories ORDER BY sort_order");
         
         while ($category = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $categories[] = $category;
@@ -43,8 +42,7 @@ class ForumAdmin {
      * @return array Category details
      */
     public function getCategoryDetails($categoryId) {
-        $stmt = $this->db->prepare("SELECT * FROM forum_categories WHERE id = ?");
-        $stmt->execute([$categoryId]);
+        $stmt = $this->db->query("SELECT * FROM forum_categories WHERE id = ?",[$categoryId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
@@ -57,11 +55,13 @@ class ForumAdmin {
      * @return bool True on success, false on failure
      */
     public function createCategory($name, $description, $sortOrder) {
-        $stmt = $this->db->prepare("
-            INSERT INTO forum_categories (name, description, sort_order, created_at) 
-            VALUES (?, ?, ?, NOW())
-        ");
-        return $stmt->execute([$name, $description, $sortOrder]);
+        $data = array(
+            'name' => $name,
+            'description' => $description,
+            'sort_order' => $sortOrder,
+            'created_at' => date('Y-m-d H:i:s')
+        );
+        return $this->db->insert('forum_categories', $data);
     }
     
     /**
@@ -74,15 +74,9 @@ class ForumAdmin {
      * @return bool True on success, false on failure
      */
     public function updateCategory($categoryId, $name, $description, $sortOrder) {
-        $stmt = $this->db->prepare("
-            UPDATE forum_categories 
-            SET name = ?, 
-                description = ?, 
-                sort_order = ?, 
-                updated_at = NOW() 
-            WHERE id = ?
-        ");
-        return $stmt->execute([$name, $description, $sortOrder, $categoryId]);
+        //Example Update $stmt = $this->db->update($table, $data, $where, $whereParams = [])
+        $stmt = $this->db->update('forum_categories', ['name' => $name, 'description' => $description, 'sort_order' => $sortOrder], 'id = ?', [$categoryId]);
+        return $stmt;
     }
     
     /**
@@ -93,46 +87,38 @@ class ForumAdmin {
      */
     public function deleteCategory($categoryId) {
         try {
-            // Start a transaction
-            $this->db->beginTransaction();
             
             // Get all forums in this category
-            $stmt = $this->db->prepare("SELECT id FROM forum_forums WHERE category_id = ?");
-            $stmt->execute([$categoryId]);
+            $stmt = $this->db->query("SELECT id FROM forum_forums WHERE category_id = ?",[$categoryId]);
             $forums = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
+            print_r($forums);
+            echo '<br>';
             // Delete all topics and posts in these forums
             foreach ($forums as $forumId) {
+                echo 'Forum ID'.$forumId;
+                echo '<br>';
                 // Get all topics in this forum
-                $stmt = $this->db->prepare("SELECT id FROM forum_topics WHERE forum_id = ?");
-                $stmt->execute([$forumId]);
+                $stmt = $this->db->query("SELECT id FROM forum_topics WHERE forum_id = ?",[$forumId]);
                 $topics = $stmt->fetchAll(PDO::FETCH_COLUMN);
                 
                 // Delete all posts in these topics
                 foreach ($topics as $topicId) {
-                    $stmt = $this->db->prepare("DELETE FROM forum_posts WHERE topic_id = ?");
-                    $stmt->execute([$topicId]);
+                    $this->db->delete('forum_posts', "topic_id = {$topicId}");
                 }
                 
                 // Delete all topics in this forum
-                $stmt = $this->db->prepare("DELETE FROM forum_topics WHERE forum_id = ?");
-                $stmt->execute([$forumId]);
+                $this->db->delete('forum_topics', "forum_id = {$forumId}");
                 
                 // Delete all forum subscriptions
-                $stmt = $this->db->prepare("DELETE FROM forum_forum_subscriptions WHERE forum_id = ?");
-                $stmt->execute([$forumId]);
+                $this->db->delete('forum_forum_subscriptions', "forum_id = {$forumId}");
             }
-            
+            echo 'Cat id:'.$categoryId;
+            echo '<br>';
             // Delete all forums in this category
-            $stmt = $this->db->prepare("DELETE FROM forum_forums WHERE category_id = ?");
-            $stmt->execute([$categoryId]);
+            $this->db->delete('forum_forums', "category_id = {$categoryId}");
             
             // Delete the category
-            $stmt = $this->db->prepare("DELETE FROM forum_categories WHERE id = ?");
-            $stmt->execute([$categoryId]);
-            
-            // Commit the transaction
-            $this->db->commit();
+            $this->db->delete('forum_categories', "id = {$categoryId}");
             
             return true;
         } catch (Exception $e) {
@@ -150,13 +136,12 @@ class ForumAdmin {
     public function getForums() {
         $forums = [];
         
-        $stmt = $this->db->prepare("
+        $stmt = $this->db->query("
             SELECT f.*, c.name AS category_name 
             FROM forum_forums f 
             JOIN forum_categories c ON f.category_id = c.id 
             ORDER BY c.sort_order, f.sort_order
         ");
-        $stmt->execute();
         
         while ($forum = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $forums[] = $forum;
@@ -172,8 +157,7 @@ class ForumAdmin {
      * @return array Forum details
      */
     public function getForumDetails($forumId) {
-        $stmt = $this->db->prepare("SELECT * FROM forum_forums WHERE id = ?");
-        $stmt->execute([$forumId]);
+        $stmt = $this->db->query("SELECT * FROM forum_forums WHERE id = ?",[$forumId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
@@ -187,11 +171,14 @@ class ForumAdmin {
      * @return bool True on success, false on failure
      */
     public function createForum($categoryId, $name, $description, $sortOrder) {
-        $stmt = $this->db->prepare("
-            INSERT INTO forum_forums (category_id, name, description, sort_order, created_at) 
-            VALUES (?, ?, ?, ?, NOW())
-        ");
-        return $stmt->execute([$categoryId, $name, $description, $sortOrder]);
+        $data = array(
+            'category_id' => $categoryId,
+            'name' => $name,
+            'description' => $description,
+            'sort_order' => $sortOrder,
+            'created_at' => date('Y-m-d H:i:s')
+        );
+        return $this->db->insert('forum_forums', $data);
     }
     
     /**
@@ -205,16 +192,9 @@ class ForumAdmin {
      * @return bool True on success, false on failure
      */
     public function updateForum($forumId, $categoryId, $name, $description, $sortOrder) {
-        $stmt = $this->db->prepare("
-            UPDATE forum_forums 
-            SET category_id = ?, 
-                name = ?, 
-                description = ?, 
-                sort_order = ?, 
-                updated_at = NOW() 
-            WHERE id = ?
-        ");
-        return $stmt->execute([$categoryId, $name, $description, $sortOrder, $forumId]);
+        //Example Update $stmt = $this->db->update($table, $data, $where, $whereParams = [])
+        $stmt = $this->db->update('forum_forums', ['category_id' => $categoryId, 'name' => $name, 'description' => $description, 'sort_order' => $sortOrder], 'id = ?', [$forumId]);
+        return $stmt;
     }
     
     /**
@@ -225,38 +205,27 @@ class ForumAdmin {
      */
     public function deleteForum($forumId) {
         try {
-            // Start a transaction
-            $this->db->beginTransaction();
             
             // Get all topics in this forum
-            $stmt = $this->db->prepare("SELECT id FROM forum_topics WHERE forum_id = ?");
-            $stmt->execute([$forumId]);
+            echo 'Forumid:'.$forumId;
+            $stmt = $this->db->query("SELECT id FROM forum_topics WHERE forum_id = ?",[$forumId]);
             $topics = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
             // Delete all posts in these topics
             foreach ($topics as $topicId) {
-                $stmt = $this->db->prepare("DELETE FROM forum_posts WHERE topic_id = ?");
-                $stmt->execute([$topicId]);
-                
+                //Delete Exemple
+                $this->db->delete('forum_posts', ['topic_id' => $topicId]);
                 // Delete all topic subscriptions
-                $stmt = $this->db->prepare("DELETE FROM forum_topic_subscriptions WHERE topic_id = ?");
-                $stmt->execute([$topicId]);
+                $this->db->delete('forum_topic_subscriptions', ['topic_id' => $topicId]);
             }
             
             // Delete all topics in this forum
-            $stmt = $this->db->prepare("DELETE FROM forum_topics WHERE forum_id = ?");
-            $stmt->execute([$forumId]);
+            $this->db->delete('forum_topics', ['forum_id' => $forumId]);
             
             // Delete all forum subscriptions
-            $stmt = $this->db->prepare("DELETE FROM forum_forum_subscriptions WHERE forum_id = ?");
-            $stmt->execute([$forumId]);
+            $this->db->delete('forum_forum_subscriptions', ['forum_id' => $forumId]);
             
             // Delete the forum
-            $stmt = $this->db->prepare("DELETE FROM forum_forums WHERE id = ?");
-            $stmt->execute([$forumId]);
-            
-            // Commit the transaction
-            $this->db->commit();
+            $this->db->delete('forum_forums', ['id' => $forumId]);
             
             return true;
         } catch (Exception $e) {
