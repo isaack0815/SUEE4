@@ -9,12 +9,13 @@ class GitHub
     private $backupDir;
     private $lastCommitFile;
     private $db;
+    private $useToken = true;
 
     /**
      * Konstruktor
      * 
      * @param string $repoUrl Die URL des Git-Repositories (Format: https://github.com/owner/repo)
-     * @param string $personalAccessToken GitHub Personal Access Token für API-Zugriff
+     * @param string $personalAccessToken GitHub Personal Access Token für API-Zugriff (optional)
      * @param Database $db Datenbankverbindung (wird aus init.php übergeben)
      */
     public function __construct($repoUrl, $personalAccessToken = '', $db = null)
@@ -29,6 +30,7 @@ class GitHub
         
         $this->personalAccessToken = $personalAccessToken;
         $this->db = $db;
+        $this->useToken = !empty($personalAccessToken);
         
         // Pfade für Logs, Backups und Commit-Datei
         $rootPath = dirname(dirname(__FILE__)) . '/';
@@ -48,13 +50,40 @@ class GitHub
         if (!is_dir(dirname($this->lastCommitFile))) {
             mkdir(dirname($this->lastCommitFile), 0777, true);
         }
+        
+        // Prüfen, ob das Repository existiert
+        $this->testRepositoryAccess();
     }
-
+    
+    /**
+     * Prüft, ob das Repository existiert und zugänglich ist
+     */
+    private function testRepositoryAccess()
+    {
+        try {
+            // Versuche, die Repository-Informationen abzurufen
+            $this->apiRequest("/repos/{$this->repoOwner}/{$this->repoName}", false);
+            $this->log("Repository ist zugänglich: {$this->repoOwner}/{$this->repoName}");
+        } catch (Exception $e) {
+            // Wenn der Fehler 401 ist und wir einen Token verwenden, versuchen wir es ohne Token
+            if (strpos($e->getMessage(), '401') !== false && $this->useToken) {
+                $this->log("Token-Authentifizierung fehlgeschlagen, versuche ohne Token");
+                $this->useToken = false;
+                
+                try {
+                    $this->apiRequest("/repos/{$this->repoOwner}/{$this->repoName}", false);
+                    $this->log("Repository ist ohne Token zugänglich: {$this->repoOwner}/{$this->repoName}");
+                } catch (Exception $e2) {
+                    throw new Exception("Repository nicht zugänglich: {$this->repoOwner}/{$this->repoName}. Fehler: " . $e2->getMessage());
+                }
+            } else {
+                throw $e;
+            }
+        }
+    }
+    
     /**
      * Nachricht in die Log-Datei schreiben
-     * 
-     * @param string $message Die zu protokollierende Nachricht
-     * @return string Die protokollierte Nachricht mit Zeitstempel
      */
     private function log($message)
     {
@@ -68,9 +97,10 @@ class GitHub
      * HTTP-Anfrage an die GitHub API senden
      * 
      * @param string $endpoint Der API-Endpunkt
+     * @param bool $useToken Ob der Token verwendet werden soll (falls vorhanden)
      * @return array Die API-Antwort als Array
      */
-    private function apiRequest($endpoint)
+    private function apiRequest($endpoint, $useToken = true)
     {
         $url = "https://api.github.com" . $endpoint;
         
@@ -79,31 +109,61 @@ class GitHub
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Git Updater');
         
-        // Access Token für private Repositories hinzufügen
-        if (!empty($this->personalAccessToken)) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: token ' . $this->personalAccessToken
-            ]);
+        // Headers vorbereiten
+        $headers = ['Accept: application/vnd.github.v3+json'];
+        
+        // Token hinzufügen, wenn vorhanden und gewünscht
+        if ($useToken && $this->useToken && !empty($this->personalAccessToken)) {
+            $headers[] = 'Authorization: token ' . $this->personalAccessToken;
+            $this->log("API-Anfrage mit Token: $url");
+        } else {
+            $this->log("API-Anfrage ohne Token: $url");
         }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
         
-        if ($httpCode !== 200) {
-            $this->log("API-Fehler: HTTP-Code $httpCode für $url");
-            $this->log("Antwort: $response");
-            throw new Exception("GitHub API-Fehler: $httpCode");
+        if ($response === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new Exception("cURL-Fehler: " . $error);
         }
         
-        return json_decode($response, true);
+        curl_close($ch);
+        
+        $responseData = json_decode($response, true);
+        
+        // Fehlerbehandlung
+        if ($httpCode !== 200) {
+            $errorMessage = isset($responseData['message']) ? $responseData['message'] : 'Unbekannter Fehler';
+            $this->log("API-Fehler: HTTP $httpCode, Nachricht: $errorMessage");
+            
+            if ($httpCode === 403 && strpos($response, 'rate limit exceeded') !== false) {
+                throw new Exception("GitHub API Rate-Limit überschritten. Bitte versuchen Sie es später erneut oder verwenden Sie einen Personal Access Token.");
+            }
+            
+            if ($httpCode === 404) {
+                throw new Exception("Repository oder Ressource nicht gefunden: {$this->repoOwner}/{$this->repoName}");
+            }
+            
+            if ($httpCode === 401 && $useToken && $this->useToken) {
+                // Wenn wir einen Token verwenden und 401 bekommen, versuchen wir es ohne Token
+                $this->log("Token-Authentifizierung fehlgeschlagen, versuche ohne Token");
+                $this->useToken = false;
+                return $this->apiRequest($endpoint, false);
+            }
+            
+            // Für andere Fehler geben wir eine allgemeine Meldung zurück
+            throw new Exception("GitHub API-Fehler ({$httpCode}): {$errorMessage}");
+        }
+        
+        return $responseData;
     }
 
     /**
      * Datei von einer URL herunterladen
-     * 
-     * @param string $url Die URL der herunterzuladenden Datei
-     * @return string Der Inhalt der Datei
      */
     private function downloadFile($url)
     {
@@ -112,21 +172,29 @@ class GitHub
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Git Updater');
         
-        // Access Token für private Repositories hinzufügen
-        if (!empty($this->personalAccessToken)) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: token ' . $this->personalAccessToken,
-                'Accept: application/vnd.github.v3.raw'
-            ]);
+        // Headers vorbereiten
+        $headers = ['Accept: application/vnd.github.v3.raw'];
+        
+        // Token hinzufügen, wenn vorhanden und aktiviert
+        if ($this->useToken && !empty($this->personalAccessToken)) {
+            $headers[] = 'Authorization: token ' . $this->personalAccessToken;
         }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
         $content = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if ($content === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new Exception("Download-Fehler: " . $error);
+        }
+        
         curl_close($ch);
         
         if ($httpCode !== 200) {
-            $this->log("Download-Fehler: HTTP-Code $httpCode für $url");
-            throw new Exception("Datei-Download-Fehler: $httpCode");
+            throw new Exception("Datei-Download-Fehler: HTTP {$httpCode}");
         }
         
         return $content;
@@ -134,8 +202,6 @@ class GitHub
 
     /**
      * Letzten bekannten Commit-Hash abrufen
-     * 
-     * @return string Der letzte bekannte Commit-Hash oder leer, wenn keiner existiert
      */
     public function getLastCommit()
     {
@@ -147,8 +213,6 @@ class GitHub
 
     /**
      * Letzten bekannten Commit-Hash speichern
-     * 
-     * @param string $commitHash Der zu speichernde Commit-Hash
      */
     private function saveLastCommit($commitHash)
     {
@@ -157,8 +221,6 @@ class GitHub
 
     /**
      * Backup des aktuellen Systems erstellen
-     * 
-     * @return string Der Pfad zum erstellten Backup
      */
     public function createBackup()
     {
@@ -167,7 +229,6 @@ class GitHub
         
         $zip = new ZipArchive();
         if ($zip->open($backupFile, ZipArchive::CREATE) !== true) {
-            $this->log("Fehler beim Erstellen des Backups");
             throw new Exception("Backup konnte nicht erstellt werden");
         }
         
@@ -181,10 +242,6 @@ class GitHub
 
     /**
      * Rekursiv einen Ordner zu einem ZIP-Archiv hinzufügen
-     * 
-     * @param ZipArchive $zip Das ZIP-Archiv
-     * @param string $folder Der hinzuzufügende Ordner
-     * @param string $zipFolder Der Pfad innerhalb des ZIP-Archivs
      */
     private function addFolderToZip($zip, $folder, $zipFolder)
     {
@@ -209,8 +266,6 @@ class GitHub
 
     /**
      * Commits seit dem letzten bekannten Commit abrufen
-     * 
-     * @return array Liste der Commits
      */
     public function getNewCommits()
     {
@@ -218,25 +273,36 @@ class GitHub
         $endpoint = "/repos/{$this->repoOwner}/{$this->repoName}/commits";
         
         $this->log("Rufe Commits ab für {$this->repoOwner}/{$this->repoName}");
-        $commits = $this->apiRequest($endpoint);
         
-        $newCommits = [];
-        foreach ($commits as $commit) {
-            if ($commit['sha'] === $lastCommit) {
-                break;
+        try {
+            $commits = $this->apiRequest($endpoint);
+            
+            $newCommits = [];
+            foreach ($commits as $commit) {
+                if ($commit['sha'] === $lastCommit) {
+                    break;
+                }
+                $newCommits[] = $commit;
             }
-            $newCommits[] = $commit;
+            
+            $this->log("Gefunden: " . count($newCommits) . " neue Commits");
+            return $newCommits;
+            
+        } catch (Exception $e) {
+            // Wenn es ein Rate-Limit-Problem ist, geben wir eine spezifischere Meldung aus
+            if (strpos($e->getMessage(), 'rate limit exceeded') !== false) {
+                throw new Exception(
+                    "GitHub API Rate-Limit überschritten. " .
+                    "Bitte versuchen Sie es später erneut oder verwenden Sie einen Personal Access Token. " .
+                    "Öffentliche Repositories sind auf 60 Anfragen pro Stunde limitiert."
+                );
+            }
+            throw $e;
         }
-        
-        $this->log("Gefunden: " . count($newCommits) . " neue Commits");
-        return $newCommits;
     }
 
     /**
      * Geänderte Dateien für einen Commit abrufen
-     * 
-     * @param string $commitSha Der Commit-Hash
-     * @return array Liste der geänderten Dateien
      */
     public function getChangedFiles($commitSha)
     {
@@ -250,7 +316,7 @@ class GitHub
         foreach ($files as $file) {
             $changedFiles[] = [
                 'filename' => $file['filename'],
-                'status' => $file['status'], // added, modified, removed
+                'status' => $file['status'],
                 'raw_url' => isset($file['raw_url']) ? $file['raw_url'] : null
             ];
         }
@@ -260,10 +326,6 @@ class GitHub
 
     /**
      * Datei aus dem Repository herunterladen
-     * 
-     * @param string $path Der Pfad zur Datei im Repository
-     * @param string $commitSha Der Commit-Hash
-     * @return string Der Inhalt der Datei
      */
     public function getFileContent($path, $commitSha)
     {
@@ -275,10 +337,6 @@ class GitHub
 
     /**
      * Änderungen auf das lokale System anwenden
-     * 
-     * @param array $changedFiles Liste der geänderten Dateien
-     * @param string $commitSha Der Commit-Hash
-     * @return array Ergebnis der Anwendung
      */
     public function applyChanges($changedFiles, $commitSha)
     {
@@ -299,14 +357,14 @@ class GitHub
                 switch ($file['status']) {
                     case 'added':
                     case 'modified':
-                        // Verzeichnis erstellen, falls es nicht existiert
                         if (!file_exists($dirPath)) {
                             mkdir($dirPath, 0755, true);
                         }
                         
-                        // Dateiinhalt herunterladen und speichern
                         $content = $this->getFileContent($file['filename'], $commitSha);
-                        file_put_contents($localPath, $content);
+                        if (file_put_contents($localPath, $content) === false) {
+                            throw new Exception("Konnte Datei nicht schreiben: " . $file['filename']);
+                        }
                         
                         if ($file['status'] === 'added') {
                             $results['added'][] = $file['filename'];
@@ -317,13 +375,12 @@ class GitHub
                         
                     case 'removed':
                         if (file_exists($localPath)) {
-                            unlink($localPath);
+                            if (!unlink($localPath)) {
+                                throw new Exception("Konnte Datei nicht löschen: " . $file['filename']);
+                            }
                             $results['removed'][] = $file['filename'];
                         }
                         break;
-                        
-                    default:
-                        $this->log("Unbekannter Dateistatus: {$file['status']} für {$file['filename']}");
                 }
             } catch (Exception $e) {
                 $this->log("Fehler beim Anwenden der Änderungen für {$file['filename']}: " . $e->getMessage());
@@ -339,12 +396,13 @@ class GitHub
 
     /**
      * SQL-Dateien ausführen
-     * 
-     * @param array $sqlFiles Liste der SQL-Dateien
-     * @return array Ergebnis der SQL-Ausführung
      */
     public function executeSqlFiles($sqlFiles)
     {
+        if (!$this->db) {
+            throw new Exception("Keine Datenbankverbindung verfügbar");
+        }
+        
         $results = [
             'success' => [],
             'errors' => []
@@ -370,6 +428,7 @@ class GitHub
                     }
                     
                     $results['success'][] = $file;
+                    
                 } catch (Exception $e) {
                     $this->log("Fehler beim Ausführen der SQL-Datei $file: " . $e->getMessage());
                     $results['errors'][] = [
@@ -385,8 +444,6 @@ class GitHub
 
     /**
      * Update durchführen
-     * 
-     * @return array Ergebnis des Updates
      */
     public function update()
     {

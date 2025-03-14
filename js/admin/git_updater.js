@@ -1,34 +1,58 @@
+/**
+ * Git Updater JavaScript
+ */
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("Git Updater JS geladen")
+  
     // Elemente abrufen
     const checkUpdatesBtn = document.getElementById("checkUpdates")
     const updateForm = document.getElementById("updateForm")
     const repoUrlInput = document.getElementById("repo_url")
-    const accessTokenInput = document.getElementById("access_token")
   
-    // Stelle sicher, dass die translations-Variable deklariert ist.
-    // Hier wird angenommen, dass 'translations' global verfügbar ist oder von irgendwoher importiert wird.
-    // Falls 'translations' von einem Modul importiert werden muss, füge hier die Import-Anweisung hinzu.
-    // Beispiel: import translations from './translations';
-    if (typeof translations === "undefined") {
-      console.error("Die translations-Variable ist nicht deklariert.")
-      return // Beende die Ausführung, wenn die Übersetzungen fehlen.
+    // Prüfen, ob die Elemente existieren
+    if (!checkUpdatesBtn) {
+      console.error('Button "checkUpdates" nicht gefunden')
+      return
+    }
+  
+    if (!updateForm) {
+      console.error('Formular "updateForm" nicht gefunden')
+      return
+    }
+  
+    if (!repoUrlInput) {
+      console.error('Input "repo_url" nicht gefunden')
+      return
+    }
+  
+    console.log("Alle Elemente gefunden")
+  
+    // Einfache Übersetzungen direkt im JavaScript definieren
+    // In einer vollständigen Implementierung würden diese aus einer externen Quelle geladen
+    const translations = {
+      check_for_updates: "Auf Updates prüfen",
+      checking: "Prüfe...",
+      repo_url_required: "Repository-URL ist erforderlich",
+      confirm_update:
+        "Möchten Sie das Update wirklich durchführen? Es wird ein Backup erstellt, bevor Änderungen vorgenommen werden.",
+      apply_updates_now: "Möchten Sie die Updates jetzt anwenden?",
+      error: "Fehler",
+      unknown_error: "Unbekannter Fehler",
+      network_error: "Netzwerkfehler",
     }
   
     // Event-Listener für "Updates prüfen"-Button
-    if (checkUpdatesBtn) {
-      checkUpdatesBtn.addEventListener("click", () => {
-        checkForUpdates()
-      })
-    }
+    checkUpdatesBtn.addEventListener("click", () => {
+      console.log("Check Updates Button geklickt")
+      checkForUpdates()
+    })
   
     // Event-Listener für das Formular
-    if (updateForm) {
-      updateForm.addEventListener("submit", (e) => {
-        if (!confirm(translations.git_updater_confirm_update)) {
-          e.preventDefault()
-        }
-      })
-    }
+    updateForm.addEventListener("submit", (e) => {
+      if (!confirm(translations.confirm_update)) {
+        e.preventDefault()
+      }
+    })
   
     /**
      * Prüft, ob Updates verfügbar sind
@@ -36,20 +60,29 @@ document.addEventListener("DOMContentLoaded", () => {
     function checkForUpdates() {
       const repoUrl = repoUrlInput.value.trim()
   
+      console.log("Prüfe Updates für Repository:", repoUrl)
+  
       if (!repoUrl) {
-        alert(translations.git_updater_repo_url_required)
+        alert(translations.repo_url_required)
         return
       }
   
       // Button deaktivieren und Ladeindikator anzeigen
       checkUpdatesBtn.disabled = true
-      checkUpdatesBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> ' + translations.git_updater_checking
+      checkUpdatesBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> ' + translations.checking
   
       // AJAX-Anfrage senden
       const formData = new FormData()
       formData.append("action", "check_updates")
       formData.append("repo_url", repoUrl)
-      formData.append("access_token", accessTokenInput.value)
+  
+      // Wenn ein Access-Token-Input existiert, diesen auch senden
+      const accessTokenInput = document.getElementById("access_token")
+      if (accessTokenInput) {
+        formData.append("access_token", accessTokenInput.value)
+      }
+  
+      console.log("Sende AJAX-Anfrage")
   
       fetch("api/git_updater.php", {
         method: "POST",
@@ -58,17 +91,25 @@ document.addEventListener("DOMContentLoaded", () => {
           "X-Requested-With": "XMLHttpRequest",
         },
       })
-        .then((response) => response.json())
+        .then((response) => {
+          console.log("Antwort erhalten:", response)
+          if (!response.ok) {
+            throw new Error("Netzwerkantwort war nicht ok")
+          }
+          return response.json()
+        })
         .then((data) => {
+          console.log("Daten erhalten:", data)
+  
           // Button zurücksetzen
           checkUpdatesBtn.disabled = false
-          checkUpdatesBtn.innerHTML = '<i class="fas fa-search me-1"></i> ' + translations.git_updater_check_updates
+          checkUpdatesBtn.innerHTML = '<i class="fas fa-search me-1"></i> ' + translations.check_for_updates
   
           if (data.success) {
             // Erfolgreiche Antwort
             if (data.count > 0) {
               // Updates verfügbar
-              const message = data.message + "\n\n" + translations.git_updater_apply_updates_now
+              const message = data.message + "\n\n" + translations.apply_updates_now
               if (confirm(message)) {
                 updateForm.submit()
               }
@@ -78,17 +119,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           } else {
             // Fehler
-            alert(translations.git_updater_error + ": " + (data.error || translations.git_updater_unknown_error))
+            alert(translations.error + ": " + (data.error || translations.unknown_error))
           }
         })
         .catch((error) => {
+          console.error("Fehler bei der AJAX-Anfrage:", error)
+  
           // Button zurücksetzen
           checkUpdatesBtn.disabled = false
-          checkUpdatesBtn.innerHTML = '<i class="fas fa-search me-1"></i> ' + translations.git_updater_check_updates
+          checkUpdatesBtn.innerHTML = '<i class="fas fa-search me-1"></i> ' + translations.check_for_updates
   
           // Fehler anzeigen
-          console.error("Error:", error)
-          alert(translations.git_updater_error + ": " + translations.git_updater_network_error)
+          alert(translations.error + ": " + translations.network_error)
         })
     }
   })

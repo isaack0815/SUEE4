@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-05 13:11:28
+/* Smarty version 5.4.3, created on 2025-03-14 11:42:01
   from 'file:admin/footer.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c83f70919e19_52730883',
+  'unifunc' => 'content_67d407f91f4003_40988373',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '1ce224fb4ebfa7576ede301623ec896edea37575' => 
     array (
       0 => 'admin/footer.tpl',
-      1 => 1741176258,
+      1 => 1741948843,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_67c83f70919e19_52730883 (\Smarty\Template $_smarty_tpl) {
+function content_67d407f91f4003_40988373 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates/admin';
 ?></main>
         </div>
