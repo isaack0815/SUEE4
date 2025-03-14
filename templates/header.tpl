@@ -117,12 +117,4 @@
     </header>
     
     <main>
-        <div class="container">
-            {if isset($smarty.session.error_message)}
-                <div class="alert alert-danger mt-3">
-                    {translate key=$smarty.session.error_message}
-                </div>
-                {* Die Session-Variable wird in PHP gelöscht, nicht im Template *}
-            {/if}
-        </div>
 

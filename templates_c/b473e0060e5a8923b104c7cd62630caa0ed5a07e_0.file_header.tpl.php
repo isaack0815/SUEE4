@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-11 12:55:41
+/* Smarty version 5.4.3, created on 2025-03-14 08:41:04
   from 'file:header.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67d024bde1a296_18213953',
+  'unifunc' => 'content_67d3dd900d9935_54884722',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'b473e0060e5a8923b104c7cd62630caa0ed5a07e' => 
     array (
       0 => 'header.tpl',
-      1 => 1741693733,
+      1 => 1741938051,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_67d024bde1a296_18213953 (\Smarty\Template $_smarty_tpl) {
+function content_67d3dd900d9935_54884722 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates';
 ?><!DOCTYPE html>
 <html lang="<?php echo (($tmp = $_smarty_tpl->getValue('currentLang') ?? null)===null||$tmp==='' ? 'de' ?? null : $tmp);?>
@@ -203,14 +203,6 @@ $_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
     </header>
     
     <main>
-        <div class="container">
-            <?php if ((true && (true && null !== ($_SESSION['error_message'] ?? null)))) {?>
-                <div class="alert alert-danger mt-3">
-                    <?php echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>$_SESSION['error_message']), $_smarty_tpl);?>
-
-                </div>
-                            <?php }?>
-        </div>
 
 <?php }
 }

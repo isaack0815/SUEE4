@@ -196,7 +196,6 @@ class Database {
                 'sql' => $sql,
                 'params' => $params
             ]);
-            echo 'kein fehler';
             // Anzahl der betroffenen Zeilen zurückgeben
             return $rowCount;
         } catch (Exception $e) {
