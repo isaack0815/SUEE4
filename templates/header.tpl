@@ -85,6 +85,12 @@
                                     {$currentUser.username}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="profile.php">
+                                            {if $item.icon}<i class="bi bi-{$item.icon} me-1"></i>{/if}
+                                            {translate key="profile"}
+                                        </a>
+                                    </li>
                                     {foreach from=$userMenu item=item}
                                         <li>
                                             <a class="dropdown-item" href="{$item.url}">

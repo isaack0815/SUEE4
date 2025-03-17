@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-05 13:07:13
+/* Smarty version 5.4.3, created on 2025-03-17 13:29:04
   from 'file:admin/index.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c83e71188760_07610563',
+  'unifunc' => 'content_67d81590059776_94771803',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '4a5332b15fd0ef727726e5bbc7e9a199a8889c35' => 
     array (
       0 => 'admin/index.tpl',
-      1 => 1741176426,
+      1 => 1741948847,
       2 => 'file',
     ),
   ),
@@ -22,7 +22,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
     'file:admin/footer.tpl' => 1,
   ),
 ))) {
-function content_67c83e71188760_07610563 (\Smarty\Template $_smarty_tpl) {
+function content_67d81590059776_94771803 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates/admin';
 ob_start();
 echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"admin_dashboard"), $_smarty_tpl);

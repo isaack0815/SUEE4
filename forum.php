@@ -7,7 +7,6 @@
 
 // Include necessary files
 require_once 'init.php';
-require_once 'includes/auth_check.php';
 require_once 'classes/Forum.php';
 
 $db = Database::getInstance();
@@ -25,3 +24,7 @@ $smarty->assign('pageTitle', 'Forum');
 // Display the template
 $smarty->display('forum.tpl');
 
+?>
+
+<ul>
+    

@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-06 12:31:55
+/* Smarty version 5.4.3, created on 2025-03-17 13:41:27
   from 'file:profile.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c987ab719b01_77518233',
+  'unifunc' => 'content_67d81877594235_33991334',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '2219b3e0738856d12e4f653e63753416e0cd4093' => 
     array (
       0 => 'profile.tpl',
-      1 => 1741260696,
+      1 => 1741948862,
       2 => 'file',
     ),
   ),
@@ -22,7 +22,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
     'file:footer.tpl' => 1,
   ),
 ))) {
-function content_67c987ab719b01_77518233 (\Smarty\Template $_smarty_tpl) {
+function content_67d81877594235_33991334 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates';
 ob_start();
 echo $_smarty_tpl->getSmarty()->getFunctionHandler('translate')->handle(array('key'=>"profile_edit"), $_smarty_tpl);
