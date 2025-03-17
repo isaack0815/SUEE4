@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.4.3, created on 2025-03-06 14:13:08
+/* Smarty version 5.4.3, created on 2025-03-17 10:29:31
   from 'file:dashboard.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.4.3',
-  'unifunc' => 'content_67c99f64296a94_82930439',
+  'unifunc' => 'content_67d7eb7b75d587_17889026',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'cb70334e2f43abb1a352ff61a2312644f5a153ab' => 
     array (
       0 => 'dashboard.tpl',
-      1 => 1741266786,
+      1 => 1741948857,
       2 => 'file',
     ),
   ),
@@ -22,7 +22,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
     'file:footer.tpl' => 1,
   ),
 ))) {
-function content_67c99f64296a94_82930439 (\Smarty\Template $_smarty_tpl) {
+function content_67d7eb7b75d587_17889026 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = '/www/htdocs/w01ddc0a/suee4/SUEE4/templates';
 $_smarty_tpl->renderSubTemplate("file:header.tpl", $_smarty_tpl->cache_id, $_smarty_tpl->compile_id, 0, $_smarty_tpl->cache_lifetime, array('title'=>"Dashboard"), (int) 0, $_smarty_current_dir);
 ?>
